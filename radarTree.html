@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+    <title>Radar tree</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-hierarchy/1.1.5/d3-hierarchy.min.js"></script>
+    <script src="radarChart.js"></script>
+    <script src="treeChart.js"></script>
+
+    <style>
+body {
+  font-family: 'Open Sans', sans-serif;
+  background-color: #424242;
+  text-align: center;
+}
+
+.tree {
+  font-size: 11px;
+  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, -1px 0 0 #fff, 0 -1px 0 #fff;
+  cursor: default;
+}
+
+.legend {
+  font-family: 'Open Sans', sans-serif;
+  fill: #333333;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: slategray;
+  stroke-opacity: 0.1;
+  shape-rendering: crispEdges;
+}
+
+.tooltip {
+  fill: #333333;
+}
+
+.gridCircle {
+  fill: #ccc;
+}
+
+.node {
+  cursor: pointer;
+}
+.radarCircleWrapper circle {
+  stroke: steelblue;
+}
+.node text {
+  font: 10px sans-serif;
+}
+.link {
+  fill: none;
+  stroke: #ccc;
+  stroke-width: 1.5px;
+}
+    </style>
+  </head>
+
+  <body>
+    <div>
+      <div class="tree">
+        <svg/>
+      </div>
+    </div>
+
+    <script>
+
+/* Convert from Kostas's 'a -> b' edge format to a normal d3 map */
+function dotToD3(data){
+  lst = [];
+  data.forEach(function(x){
+    elem = x.split("->");
+    source = elem[0].trim();
+    target = elem[1].trim();
+    lst.push({source: source, target: target});
+  });
+  return lst;
+}
+
+function preProcess(apiData){
+  var nodes = [];
+  Object.keys(apiData.nodes).forEach(function(d){
+    var temp = apiData.nodes[d];
+    temp.id = d;
+    nodes.push(temp);
+  });
+  var edges = dotToD3(apiData.edges);
+  return {nodes: nodes, edges: edges};
+}
+
+function fetchAndDraw(error, apiData){
+  if (error) throw error;
+
+  // Preprocessing
+  var clean = preProcess(apiData);
+  var nodes = clean.nodes;
+  var edges = clean.edges;
+
+  // Set settings
+  var scalesAndAxes = generateScalesAndAxes(nodes);
+  var radarChartOptions = {
+    w: 80,
+    h: 80,
+    dotRadius: 0.4,
+    tickSize: 0,
+    axisLabels: false,
+    tickLabels: false,
+    gridCircle: true,
+    hover: true,
+    fields: ['external.links.next', 'inter-block.blockAccess.direct', 'inter-block.blockAccess.headLink', 'inter-block.fanout.fixedValue', 'intra-block.capacity.value', 'intra-block.filters.zoneMaps.min', 'intra-block.links.next', 'inter-block.partitioning.function', 'intra-block.dataRetention.valueRetention.compression', 'inter-block.orderMaintenance.type', 'inter-block.partitioning.type'],
+    standaloneMode: false,
+    scalesAndAxes: scalesAndAxes,
+    roundStrokes: false,
+  };
+
+  // Draw
+  root = RadarTree(nodes, edges, {radarChartOptions: radarChartOptions});
+  root(d3.select(".tree svg"));
+}
+
+// Do it
+d3.json("apidata.json", fetchAndDraw);
+
+    </script>
+  </body>
+</html>
