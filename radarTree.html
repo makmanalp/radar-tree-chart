@@ -120,7 +120,7 @@ function fetchAndDraw(error, apiData){
   // Draw
   root = RadarTree(nodes, edges, {radarChartOptions: radarChartOptions});
   var selection = d3.select(".tree svg");
-  if (selection){
+  if (!selection.selectAll("g").empty()){
     selection.selectAll("g").remove();
   }
   root(selection);
