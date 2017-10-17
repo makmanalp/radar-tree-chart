@@ -119,10 +119,14 @@ function fetchAndDraw(error, apiData){
 
   // Draw
   root = RadarTree(nodes, edges, {radarChartOptions: radarChartOptions});
-  root(d3.select(".tree svg"));
+  var selection = d3.select(".tree svg");
+  if (selection){
+    selection.selectAll("g").remove();
+  }
+  root(selection);
 }
 
-// Do it
+// Rerun this part in a regular interval to redraw graph.
 d3.json("apidata.json", fetchAndDraw);
 
     </script>
